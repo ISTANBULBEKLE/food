@@ -1,36 +1,62 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import SearchBar from '../components/SearchBar';
-import yelp from '../api/yelp';
+import useResults from '../hooks/useResults';
+import ResultsList from '../components/ResultsList';
 
 const SearchScreen = () => {
   const [term, setTerm] = useState('');
-  const [results, setResults] =useState([]);
+  const [searchApi, results, errorMessage] = useResults();
 
-  const searchApi = async() => {
-    const response = await yelp.get('/search', {
-      params: {
-        limit: 50,
-        term: term,
-        location: 'san jose',
-      }
+  const filterResultsByPrice = (price) => {
+    return results.filter((result) => {
+      return result.price === price;
     });
-    setResults(response.data.businesses);
   }
 
+
+  console.log("this is the results " + results);
   return (
     <View>
       <SearchBar 
         term={term} 
         onTermChange={setTerm}
-        onTermSubmit={searchApi}
+        onTermSubmit={() => searchApi(term)}
         />
-      <Text>This is SearchScreen page</Text>
-      <Text> We have found {results.length} results</Text>
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null }
+      <Text style={styles.textHeader}> We have found {results.length} results</Text>
+      <ResultsList 
+        title="Cost Effective" 
+        results={filterResultsByPrice('$')}
+      />
+      <ResultsList  
+        title="Bit Pricier"
+        results={filterResultsByPrice('$$')}
+
+      />
+      <ResultsList 
+        title="Big Spender" 
+        results={filterResultsByPrice('$$$')}
+
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  errorMessage: {
+    fontSize: 20,
+    color: 'red',
+    marginLeft: 15,
+    marginRight: 15,
+    padding: 10
+  },
+  textHeader: {
+    fontSize: 20,
+    marginLeft: 15,
+    marginRight: 15,
+    padding: 10
+  }
+});
 
 export default SearchScreen;
